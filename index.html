@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13212A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dias Limpos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>[hidden]{display:none!important}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Dias Limpos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: uma coluna estreita, contador em destaque no topo, check-in do dia logo abaixo, histórico em seguida */
+:root {
+  --bg: #EDF1F3; --surface: #FFFFFF; --ink: #13212A; --muted: #5A6B76; --line: #D5DEE3;
+  --accent: #C9701E; --accent-soft: #F7E6D3; --good: #2A8763; --good-soft: #DCF0E6;
+  --bad: #B8433A; --bad-soft: #F6DEDB; --empty: #DCE3E7;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D151B; --surface: #15212A; --ink: #E6EDF0; --muted: #93A4AE; --line: #26353F;
+  --accent: #F0A04B; --accent-soft: #3A2B1C; --good: #4DBF8E; --good-soft: #17322A;
+  --bad: #E36E64; --bad-soft: #3A1E1D; --empty: #22303A; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0D151B; --surface: #15212A; --ink: #E6EDF0; --muted: #93A4AE; --line: #26353F;
+  --accent: #F0A04B; --accent-soft: #3A2B1C; --good: #4DBF8E; --good-soft: #17322A;
+  --bad: #E36E64; --bad-soft: #3A1E1D; --empty: #22303A; color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { background: var(--bg); color: var(--ink) }
+body { font: 16px/1.5 var(--body); padding-inline: 16px; padding-block: 20px 48px }
+.wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 20px }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.15 }
+h2 { font-size: 1.25rem; font-weight: 700 }
+p { margin: 0 }
+.muted { color: var(--muted) }
+.small { font-size: .875rem }
+.eyebrow { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600 }
+
+header.top { display: flex; justify-content: space-between; align-items: center; gap: 12px }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 1.15rem }
+.brand svg { width: 30px; height: 30px; flex: none }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 16px }
+
+/* Contador */
+.hero { text-align: left; gap: 10px; padding: 24px 20px }
+.counter { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; align-items: end }
+.unit { display: grid; gap: 2px; min-width: 0 }
+.num { font-family: var(--display); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; font-size: clamp(2.2rem, 10vw, 3.4rem) }
+.unit.days .num { font-size: clamp(3.6rem, 18vw, 5.6rem); color: var(--accent) }
+.lbl { font-size: .8rem; color: var(--muted); letter-spacing: .04em }
+.sec { font-variant-numeric: tabular-nums }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .875rem; color: var(--muted) }
+.meta b { color: var(--ink); font-weight: 600 }
+.progress { height: 8px; background: var(--empty); border-radius: 99px; overflow: hidden }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s ease }
+.goal { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted) }
+
+/* Botões */
+button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 12px 16px; font-weight: 600; transition: transform .1s, background .15s, border-color .15s }
+button:active { transform: scale(.98) }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px }
+.primary { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.link { background: none; border: 0; padding: 4px 0; color: var(--muted); font-weight: 500; text-decoration: underline; text-underline-offset: 3px }
+.answer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.answer button { padding: 16px 12px; display: grid; gap: 2px; text-align: left }
+.answer button small { font-weight: 400; color: var(--muted); font-size: .8rem }
+.answer .no[aria-pressed="true"] { background: var(--good-soft); border-color: var(--good); }
+.answer .yes[aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); }
+
+.moods { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px }
+.moods button { padding: 10px 4px; display: grid; justify-items: center; gap: 4px; font-weight: 500; font-size: .72rem; color: var(--muted) }
+.moods button .face { font-size: 1.6rem; line-height: 1; filter: grayscale(.6); opacity: .8 }
+.moods button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink) }
+.moods button[aria-pressed="true"] .face { filter: none; opacity: 1 }
+
+label.field { display: grid; gap: 6px; font-weight: 600; font-size: .95rem }
+textarea, input[type="datetime-local"] { font: inherit; font-weight: 400; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; width: 100%; resize: vertical }
+textarea { min-height: 84px }
+
+.banner { border-radius: 14px; padding: 14px 16px; font-size: .92rem; display: grid; gap: 4px }
+.banner.good { background: var(--good-soft) }
+.banner.bad { background: var(--bad-soft) }
+.banner.warn { background: var(--accent-soft) }
+
+.confirm { border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 14px; padding: 14px; display: grid; gap: 10px }
+.row { display: flex; flex-wrap: wrap; gap: 10px }
+.danger { background: var(--bad); border-color: var(--bad); color: #fff }
+
+/* Últimos 30 dias */
+.strip { display: grid; grid-template-columns: repeat(15, 1fr); gap: 5px }
+.dot { aspect-ratio: 1; max-width: 100%; border-radius: 6px; background: var(--empty); position: relative }
+.dot.clean { background: var(--good) }
+.dot.relapse { background: var(--bad) }
+.dot.today { outline: 2px solid var(--ink); outline-offset: 1px }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted) }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px }
+
+/* Histórico */
+.hist { display: grid; gap: 0; list-style: none; margin: 0; padding: 0 }
+.hist li { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; padding: 14px 0; border-top: 1px solid var(--line) }
+.hist li:first-child { border-top: 0; padding-top: 0 }
+.hist .face { font-size: 1.5rem; grid-row: span 3 }
+.hist .head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0 }
+.hist .txt { font-size: .92rem; min-width: 0; overflow-wrap: anywhere }
+.hist .txt span { color: var(--muted) }
+.pill { font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 99px }
+.pill.clean { background: var(--good-soft); color: var(--good) }
+.pill.relapse { background: var(--bad-soft); color: var(--bad) }
+
+details.sos summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 1.1rem; list-style: none }
+details.sos summary::-webkit-details-marker { display: none }
+details.sos summary::after { content: " +"; color: var(--accent) }
+details.sos[open] summary::after { content: " –" }
+details.sos ul { margin: 12px 0 0; padding-left: 1.2em; display: grid; gap: 6px }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-weight: 600; font-size: .9rem; opacity: 0; transition: .25s; pointer-events: none; max-width: calc(100% - 32px) }
+.toast.show { opacity: 1; transform: translate(-50%, 0) }
+footer { display: grid; gap: 10px; justify-items: start; font-size: .85rem; color: var(--muted) }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="var(--ink)"/><path d="M12 42h40" stroke="var(--bg)" stroke-width="4" stroke-linecap="round"/><path d="M20 42a12 12 0 0 1 24 0" fill="var(--accent)"/><path d="M32 14v8M18 20l5 5M46 20l-5 5" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/></svg>
+      Dias Limpos
+    </div>
+    <span class="small muted" id="todayLabel"></span>
+  </header>
+
+  <!-- Primeiro acesso -->
+  <section class="card" id="onboard" hidden>
+    <p class="eyebrow">Começar</p>
+    <h1 style="font-size:1.7rem">Cada dia limpo conta. Vamos contar juntos.</h1>
+    <p class="muted">O app mostra há quantos dias, horas e minutos você está sem pornografia. Todo dia você responde se assistiu, como está se sentindo e o que quer melhorar.</p>
+    <label class="field" for="startInput">Desde quando você está limpo?
+      <input type="datetime-local" id="startInput">
+    </label>
+    <button class="primary" id="startBtn">Começar a contar</button>
+    <p class="small muted">Seus registros ficam só neste aparelho. Nada é enviado para a internet.</p>
+  </section>
+
+  <main id="app" class="wrap" hidden style="gap:20px">
+    <!-- Contador -->
+    <section class="card hero" aria-live="off">
+      <p class="eyebrow">Você está limpo há</p>
+      <div class="counter">
+        <div class="unit days"><span class="num" id="cDays">0</span><span class="lbl" id="lDays">dias</span></div>
+        <div class="unit"><span class="num" id="cHours">00</span><span class="lbl">horas</span></div>
+        <div class="unit"><span class="num" id="cMins">00</span><span class="lbl">minutos <span class="sec" id="cSecs"></span></span></div>
+      </div>
+      <div class="meta">
+        <span>Recorde: <b id="best">0 dias</b></span>
+        <span>Início: <b id="since">–</b></span>
+        <span>Dias limpos no total: <b id="totalClean">0</b></span>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="bar" style="width:0%"></span></div>
+      <div class="goal"><span id="goalText">Próxima meta: 1 dia</span><span id="goalPct">0%</span></div>
+      <div>
+        <button class="link" id="relapseNow">Tive uma recaída agora</button>
+      </div>
+      <div class="confirm" id="relapseConfirm" hidden>
+        <p><b>Registrar recaída e zerar o contador?</b><br><span class="small">Tudo bem. Recaída faz parte do processo. Seu recorde e seu histórico continuam salvos.</span></p>
+        <div class="row"><button class="danger" id="relapseYes">Sim, zerar contador</button><button id="relapseNo">Cancelar</button></div>
+      </div>
+    </section>
+
+    <!-- Check-in diário -->
+    <section class="card" id="checkin">
+      <div style="display:grid;gap:4px">
+        <p class="eyebrow" id="checkinDate">Check-in de hoje</p>
+        <h2>Você assistiu pornografia hoje?</h2>
+      </div>
+      <div class="banner warn" id="pendingBanner" hidden><b>Falta o seu check-in de hoje.</b><span>Leva menos de um minuto e mantém seu histórico em dia.</span></div>
+      <div class="answer" role="group" aria-label="Você assistiu pornografia hoje?">
+        <button class="no" id="ansNo" aria-pressed="false">Não<small>Me mantive firme</small></button>
+        <button class="yes" id="ansYes" aria-pressed="false">Sim<small>Tive uma recaída</small></button>
+      </div>
+      <div class="confirm" id="yesConfirm" hidden>
+        <p><b>Isso vai zerar o seu contador.</b><br><span class="small">Recomeçar também é progresso. Seu recorde fica salvo.</span></p>
+        <div class="row"><button class="danger" id="yesOk">Confirmar recaída</button><button id="yesCancel">Voltar</button></div>
+      </div>
+
+      <div style="display:grid;gap:8px">
+        <span style="font-weight:600;font-size:.95rem">Como você está se sentindo hoje?</span>
+        <div class="moods" id="moods" role="group" aria-label="Sentimento"></div>
+      </div>
+      <label class="field" for="feeling">Conte um pouco sobre o seu dia
+        <textarea id="feeling" placeholder="Ex.: Dia cansativo no trabalho, mas consegui sair para caminhar quando bateu a vontade."></textarea>
+      </label>
+      <label class="field" for="improve">O que você quer melhorar?
+        <textarea id="improve" placeholder="Ex.: Deixar o celular fora do quarto antes de dormir."></textarea>
+      </label>
+      <button class="primary" id="saveBtn">Salvar check-in</button>
+      <p class="small muted" id="savedInfo" hidden></p>
+    </section>
+
+    <!-- Últimos 30 dias -->
+    <section class="card">
+      <h2>Últimos 30 dias</h2>
+      <div class="strip" id="strip"></div>
+      <div class="legend"><span><i style="background:var(--good)"></i>Limpo</span><span><i style="background:var(--bad)"></i>Recaída</span><span><i style="background:var(--empty)"></i>Sem check-in</span></div>
+    </section>
+
+    <!-- Momento difícil -->
+    <section class="card">
+      <details class="sos">
+        <summary>Bateu a vontade agora?</summary>
+        <ul class="small">
+          <li>Levante e mude de ambiente. Saia do quarto ou do banheiro.</li>
+          <li>Respire devagar: 4 segundos inspirando, 6 soltando, por 2 minutos.</li>
+          <li>Beba um copo de água gelada ou tome um banho frio.</li>
+          <li>Mande mensagem ou ligue para alguém de confiança.</li>
+          <li>Releia abaixo o que você escreveu que quer melhorar.</li>
+          <li>A vontade passa, normalmente em 15 a 20 minutos. Você já venceu ela antes.</li>
+        </ul>
+        <p class="small" id="sosGoal" style="margin-top:12px"></p>
+      </details>
+    </section>
+
+    <!-- Histórico -->
+    <section class="card">
+      <h2>Seu diário</h2>
+      <ul class="hist" id="hist"></ul>
+      <p class="muted small" id="histEmpty">Seus check-ins vão aparecer aqui.</p>
+    </section>
+
+    <footer>
+      <span>Seus dados ficam guardados só neste aparelho e navegador.</span>
+      <button class="link" id="resetAll">Apagar todos os dados</button>
+      <div class="confirm" id="resetConfirm" hidden>
+        <p><b>Apagar tudo?</b><br><span class="small">Contador, recorde e diário serão apagados deste aparelho. Não dá para desfazer.</span></p>
+        <div class="row"><button class="danger" id="resetYes">Apagar tudo</button><button id="resetNo">Cancelar</button></div>
+      </div>
+    </footer>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  const KEY = 'dias-limpos-v1';
+  const DAY = 86400000;
+  const MOODS = [
+    { v: 1, face: '😣', label: 'Muito mal' },
+    { v: 2, face: '😕', label: 'Mal' },
+    { v: 3, face: '😐', label: 'Neutro' },
+    { v: 4, face: '🙂', label: 'Bem' },
+    { v: 5, face: '😄', label: 'Muito bem' }
+  ];
+  const GOALS = [1, 3, 7, 14, 21, 30, 60, 90, 180, 365, 730];
+  const $ = id => document.getElementById(id);
+
+  let mem = null;
+  function load() {
+    try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return mem || { start: null, best: 0, entries: {}, relapses: [] };
+  }
+  function save() {
+    mem = state;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  let state = load();
+
+  const pad = n => String(n).padStart(2, '0');
+  const dayKey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const fmtDate = (d, opts) => d.toLocaleDateString('pt-BR', opts || { day: '2-digit', month: 'short' });
+  const plural = (n, s, p) => n + ' ' + (n === 1 ? s : p);
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // Primeiro acesso
+  function localInputValue(d) {
+    return dayKey(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  $('startInput').value = localInputValue(new Date());
+  $('startInput').max = localInputValue(new Date());
+  $('startBtn').onclick = () => {
+    const v = $('startInput').value;
+    let t = v ? new Date(v).getTime() : Date.now();
+    if (isNaN(t) || t > Date.now()) t = Date.now();
+    state.start = t; save(); show(); toast('Contador iniciado. Força!');
+  };
+
+  // Contador
+  function tick() {
+    if (!state.start) return;
+    const ms = Math.max(0, Date.now() - state.start);
+    const d = Math.floor(ms / DAY), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+    $('cDays').textContent = d;
+    $('lDays').textContent = d === 1 ? 'dia' : 'dias';
+    $('cHours').textContent = pad(h);
+    $('cMins').textContent = pad(m);
+    $('cSecs').textContent = '· ' + pad(s) + 's';
+    const best = Math.max(state.best || 0, ms);
+    $('best').textContent = plural(Math.floor(best / DAY), 'dia', 'dias');
+    const goal = GOALS.find(g => g > d) || (Math.ceil((d + 1) / 365) * 365);
+    const pct = Math.min(100, (ms / (goal * DAY)) * 100);
+    $('bar').style.width = pct.toFixed(1) + '%';
+    $('goalText').textContent = 'Próxima meta: ' + plural(goal, 'dia', 'dias');
+    $('goalPct').textContent = Math.floor(pct) + '%';
+    $('sosGoal').innerHTML = 'Você está a <b>' + plural(Math.max(1, Math.ceil(goal - ms / DAY)), 'dia', 'dias') + '</b> da sua próxima meta de ' + plural(goal, 'dia', 'dias') + '. Não jogue isso fora por alguns minutos.';
+  }
+
+  function registerRelapse() {
+    const now = Date.now();
+    const streak = now - state.start;
+    state.best = Math.max(state.best || 0, streak);
+    state.relapses.push(now);
+    state.start = now;
+    const k = dayKey(new Date());
+    state.entries[k] = Object.assign({}, state.entries[k] || {}, { watched: true, at: now });
+    save(); render(); tick();
+  }
+
+  $('relapseNow').onclick = () => { $('relapseConfirm').hidden = false; };
+  $('relapseNo').onclick = () => { $('relapseConfirm').hidden = true; };
+  $('relapseYes').onclick = () => { $('relapseConfirm').hidden = true; registerRelapse(); toast('Contador zerado. Recomeçar também é coragem.'); };
+
+  // Check-in
+  let draft = { watched: null, mood: null };
+  const moodsEl = $('moods');
+  MOODS.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.v = m.v; b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<span class="face" aria-hidden="true">' + m.face + '</span>' + m.label;
+    b.onclick = () => { draft.mood = m.v; paintCheckin(); };
+    moodsEl.appendChild(b);
+  });
+
+  function todayEntry() { return state.entries[dayKey(new Date())]; }
+
+  function paintCheckin() {
+    const e = todayEntry();
+    const locked = e && e.watched === true;
+    $('ansNo').setAttribute('aria-pressed', String(draft.watched === false));
+    $('ansYes').setAttribute('aria-pressed', String(draft.watched === true));
+    $('ansNo').disabled = locked;
+    [...moodsEl.children].forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === draft.mood)));
+    $('pendingBanner').hidden = !!(e && typeof e.watched === 'boolean');
+  }
+
+  $('ansNo').onclick = () => { draft.watched = false; $('yesConfirm').hidden = true; paintCheckin(); };
+  $('ansYes').onclick = () => {
+    const e = todayEntry();
+    if (e && e.watched === true) return;
+    $('yesConfirm').hidden = false;
+  };
+  $('yesCancel').onclick = () => { $('yesConfirm').hidden = true; };
+  $('yesOk').onclick = () => {
+    $('yesConfirm').hidden = true; draft.watched = true; registerRelapse();
+    toast('Recaída registrada. Agora conte como você está.');
+  };
+
+  $('saveBtn').onclick = () => {
+    if (draft.watched === null) { toast('Responda se você assistiu hoje.'); $('ansNo').focus(); return; }
+    if (!draft.mood) { toast('Escolha como você está se sentindo.'); return; }
+    const k = dayKey(new Date());
+    state.entries[k] = Object.assign({}, state.entries[k] || {}, {
+      watched: draft.watched, mood: draft.mood,
+      feeling: $('feeling').value.trim(), improve: $('improve').value.trim(), at: Date.now()
+    });
+    save(); render(); toast('Check-in salvo');
+  };
+
+  function loadDraft() {
+    const e = todayEntry();
+    draft = { watched: e && typeof e.watched === 'boolean' ? e.watched : null, mood: e && e.mood || null };
+    $('feeling').value = e && e.feeling || '';
+    $('improve').value = e && e.improve || '';
+    if (e && e.mood) {
+      $('savedInfo').hidden = false;
+      $('savedInfo').textContent = 'Check-in salvo às ' + new Date(e.at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. Você pode editar e salvar de novo.';
+      $('saveBtn').textContent = 'Atualizar check-in';
+    } else {
+      $('savedInfo').hidden = true; $('saveBtn').textContent = 'Salvar check-in';
+    }
+  }
+
+  // Status de um dia: relapse, clean ou vazio
+  function dayStatus(k) {
+    const e = state.entries[k];
+    if (e && e.watched === true) return 'relapse';
+    if (e && e.watched === false) return 'clean';
+    return '';
+  }
+
+  function renderStrip() {
+    const el = $('strip'); el.innerHTML = '';
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const k = dayKey(d), st = dayStatus(k);
+      const s = document.createElement('div');
+      s.className = 'dot ' + st + (i === 0 ? ' today' : '');
+      s.title = fmtDate(d) + (st === 'clean' ? ': limpo' : st === 'relapse' ? ': recaída' : ': sem check-in');
+      el.appendChild(s);
+    }
+  }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function renderHist() {
+    const keys = Object.keys(state.entries).sort().reverse();
+    $('histEmpty').hidden = keys.length > 0;
+    $('hist').innerHTML = keys.slice(0, 60).map(k => {
+      const e = state.entries[k];
+      const m = MOODS.find(x => x.v === e.mood);
+      const d = fromKey(k);
+      const st = e.watched === true ? '<span class="pill relapse">Recaída</span>' : e.watched === false ? '<span class="pill clean">Limpo</span>' : '';
+      return '<li><span class="face" aria-hidden="true">' + (m ? m.face : '·') + '</span>' +
+        '<div class="head"><b>' + esc(fmtDate(d, { weekday: 'short', day: '2-digit', month: 'short' })) + '</b>' + st +
+        (m ? '<span class="small muted">' + m.label + '</span>' : '') + '</div>' +
+        (e.feeling ? '<p class="txt"><span>Sentimento: </span>' + esc(e.feeling) + '</p>' : '') +
+        (e.improve ? '<p class="txt"><span>Quero melhorar: </span>' + esc(e.improve) + '</p>' : '') +
+        '</li>';
+    }).join('');
+    const clean = Object.values(state.entries).filter(e => e.watched === false).length;
+    $('totalClean').textContent = clean;
+  }
+
+  function render() {
+    $('todayLabel').textContent = fmtDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' });
+    $('checkinDate').textContent = 'Check-in de hoje · ' + fmtDate(new Date(), { day: 'numeric', month: 'long' });
+    $('since').textContent = state.start ? new Date(state.start).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–';
+    loadDraft(); paintCheckin(); renderStrip(); renderHist();
+  }
+
+  function show() {
+    const has = !!state.start;
+    $('onboard').hidden = has;
+    $('app').hidden = !has;
+    if (has) { render(); tick(); }
+  }
+
+  // Apagar dados
+  $('resetAll').onclick = () => { $('resetConfirm').hidden = false; };
+  $('resetNo').onclick = () => { $('resetConfirm').hidden = true; };
+  $('resetYes').onclick = () => {
+    state = { start: null, best: 0, entries: {}, relapses: [] }; mem = null;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    $('resetConfirm').hidden = true; show(); window.scrollTo(0, 0);
+  };
+
+  // Atualiza ao virar o dia
+  let lastDay = dayKey(new Date());
+  setInterval(() => {
+    tick();
+    const k = dayKey(new Date());
+    if (k !== lastDay) { lastDay = k; if (state.start) render(); }
+  }, 1000);
+
+  show();
+
+  // Funciona offline quando instalado como app (PWA)
+  if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]')) {
+    try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+  }
+})();
+</script>
+
+</body>
+</html>
